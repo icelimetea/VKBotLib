@@ -69,10 +69,6 @@ public class Bot {
         return new LongPollClient(this, httpClient, handlersExecutor, groupId);
     }
 
-    public HttpClient getHttpClient() {
-        return httpClient;
-    }
-
     public void shutdown() {
         handlersExecutor.shutdown();
         httpClientExecutor.shutdown();
