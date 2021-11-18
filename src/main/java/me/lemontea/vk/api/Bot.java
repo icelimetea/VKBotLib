@@ -66,15 +66,11 @@ public class Bot {
     }
 
     public LongPollClient createLongPollClient(int groupId) {
-        return new LongPollClient(this, handlersExecutor, groupId);
+        return new LongPollClient(this, httpClient, handlersExecutor, groupId);
     }
 
     public HttpClient getHttpClient() {
         return httpClient;
-    }
-
-    public Gson getGsonInstance() {
-        return gson;
     }
 
     public void shutdown() {

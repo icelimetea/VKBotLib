@@ -10,6 +10,7 @@ import me.lemontea.vk.api.request.requests.GroupLongPollServerRequest;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.concurrent.CompletionStage;
@@ -24,15 +25,19 @@ public class LongPollClient {
     private final Bot bot;
     private final long groupId;
 
+    private final HttpClient httpClient;
+
     private final EventRegistry eventRegistry;
 
     private final ExecutorService handlersExecutor;
 
     private final Gson gson;
 
-    public LongPollClient(Bot bot, ExecutorService handlersExecutor, long groupId) {
+    public LongPollClient(Bot bot, HttpClient httpClient, ExecutorService handlersExecutor, long groupId) {
         this.bot = bot;
         this.groupId = groupId;
+
+        this.httpClient = httpClient;
 
         this.handlersExecutor = handlersExecutor;
 
@@ -77,7 +82,7 @@ public class LongPollClient {
             ))).GET().build();
 
             CompletionStage<LongPollResponse> httpRespFuture =
-                    bot.getHttpClient()
+                    httpClient
                             .sendAsync(httpRequest, HttpResponse.BodyHandlers.ofString())
                             .thenApply(strResp -> gson.fromJson(strResp.body(), LongPollResponse.class));
 
