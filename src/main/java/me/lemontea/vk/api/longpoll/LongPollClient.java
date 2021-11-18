@@ -33,6 +33,8 @@ public class LongPollClient {
 
     private final Gson gson;
 
+    private volatile boolean running;
+
     public LongPollClient(Bot bot, HttpClient httpClient, ExecutorService handlersExecutor, long groupId) {
         this.bot = bot;
         this.groupId = groupId;
@@ -46,6 +48,8 @@ public class LongPollClient {
         gson = new GsonBuilder()
                 .registerTypeAdapter(Event.class, new EventJSONAdapter(eventRegistry))
                 .create();
+
+        running = true;
     }
 
     public void start() {
@@ -75,6 +79,9 @@ public class LongPollClient {
     }
 
     private void pollEvents(String server, String key, String timestamp) {
+        if (!running)
+            return;
+
         try {
             HttpRequest httpRequest = HttpRequest.newBuilder(new URI(String.format(
                     "%s?act=a_check&key=%s&ts=%s&wait=%d",
@@ -123,6 +130,10 @@ public class LongPollClient {
 
     public EventRegistry getEventRegistry() {
         return eventRegistry;
+    }
+
+    public void shutdown() {
+        running = false;
     }
 
 }

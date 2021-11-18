@@ -13,7 +13,9 @@ import java.net.URISyntaxException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Logger;
@@ -30,6 +32,8 @@ public class Bot {
     private final ExecutorService httpClientExecutor;
     private final ExecutorService handlersExecutor;
 
+    private final List<LongPollClient> longPollClients;
+
     private final String accessToken;
 
     private final QuerySerializer serializer;
@@ -43,6 +47,8 @@ public class Bot {
 
         httpClientExecutor = Executors.newFixedThreadPool(2);
         handlersExecutor = Executors.newFixedThreadPool(4);
+
+        longPollClients = new CopyOnWriteArrayList<>();
 
         serializer = new QuerySerializer();
         httpClient = HttpClient.newBuilder().executor(httpClientExecutor).build();
@@ -66,10 +72,17 @@ public class Bot {
     }
 
     public LongPollClient createLongPollClient(int groupId) {
-        return new LongPollClient(this, httpClient, handlersExecutor, groupId);
+        LongPollClient client = new LongPollClient(this, httpClient, handlersExecutor, groupId);
+
+        longPollClients.add(client);
+
+        return client;
     }
 
     public void shutdown() {
+        for (LongPollClient client : longPollClients)
+            client.shutdown();
+
         handlersExecutor.shutdown();
         httpClientExecutor.shutdown();
     }
